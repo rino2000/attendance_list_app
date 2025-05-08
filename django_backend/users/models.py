@@ -13,5 +13,8 @@ class CustomUser(AbstractUser):
     password = models.CharField(max_length=80, null=False, blank=False)
     team = models.PositiveSmallIntegerField(null=False, blank=False)
 
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["password"]
+
     def __str__(self) -> str:
         return f"User({self.email} {self.team})"
