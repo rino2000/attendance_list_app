@@ -18,3 +18,15 @@ class CustomUser(AbstractUser):
     @property
     def is_team_lead(self) -> bool:
         return self.is_team_leader
+
+
+class Attendance(models.Model):
+    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    date = models.DateField(auto_now_add=True)
+    status = models.CharField(
+        choices=[("present", "Present"), ("absent", "Absent")], default="present"
+    )
+    reason = models.TextField(max_length=100, blank=True, null=True)
+
+    def __str__(self) -> str:
+        return f"Attendance({self.employee.pk} {self.date})"
