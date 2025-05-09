@@ -1,9 +1,8 @@
 from django.test import TestCase
+from users.models import CustomUser
 
-from .models import CustomUser
 
-
-class CustomUserTestCase(TestCase):
+class TeamTestCase(TestCase):
     def setUp(self):
         CustomUser.objects.create(
             first_name="test1",
@@ -20,16 +19,18 @@ class CustomUserTestCase(TestCase):
             email="test2@test.com",
             password="test",
             username="test2",
-            team=222,
+            team=111,
             is_team_leader=False,
         )
 
-    def test_create_team_leader(self):
+    def test_create_team(self):
         teamleader = CustomUser.objects.get(email="test1@test.com")
         employee = CustomUser.objects.get(email="test2@test.com")
 
         self.assertEqual(teamleader.email, "test1@test.com")
         self.assertEqual(teamleader.is_team_leader, True)
+        self.assertEqual(teamleader.team, 111)
 
         self.assertEqual(employee.email, "test2@test.com")
         self.assertEqual(employee.is_team_leader, False)
+        self.assertEqual(employee.team, 111)
