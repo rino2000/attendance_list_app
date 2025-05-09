@@ -8,3 +8,6 @@ class Team(models.Model):
     employees = models.ManyToManyField(
         CustomUser, related_name="%(app_label)s_%(class)s_related"
     )
+
+    # def __str__(self) -> str:
+    #     return f"Team({self.team} {self.team_leader})"

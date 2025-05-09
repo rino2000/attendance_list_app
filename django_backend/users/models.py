@@ -13,7 +13,7 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = ["password"]
 
     def __str__(self) -> str:
-        return f"CustomUser(email: {self.email} team: {self.team} is team leader: {self.is_team_leader})"
+        return f"CustomUser(email: {self.email} is team leader: {self.is_team_leader})"
 
     @property
     def is_team_lead(self) -> bool:

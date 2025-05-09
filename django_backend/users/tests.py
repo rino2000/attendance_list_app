@@ -11,7 +11,6 @@ class CustomUserTestCase(TestCase):
             email="test1@test.com",
             password="test",
             username="test1",
-            team=111,
             is_team_leader=True,
         )
         CustomUser.objects.create(
@@ -20,7 +19,6 @@ class CustomUserTestCase(TestCase):
             email="test2@test.com",
             password="test",
             username="test2",
-            team=222,
             is_team_leader=False,
         )
 
