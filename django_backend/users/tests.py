@@ -27,5 +27,9 @@ class CustomUserTestCase(TestCase):
     def test_create_team_leader(self):
         teamleader = CustomUser.objects.get(email="test1@test.com")
         employee = CustomUser.objects.get(email="test2@test.com")
+
         self.assertEqual(teamleader.email, "test1@test.com")
+        self.assertEqual(teamleader.roles, "teamleader")
+
         self.assertEqual(employee.email, "test2@test.com")
+        self.assertEqual(employee.roles, "employee")
