@@ -4,7 +4,7 @@ from users.models import CustomUser
 
 class Team(models.Model):
     team = models.SmallIntegerField(blank=False, null=False, unique=True)
-    team_leader = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    team_leader = models.OneToOneField(CustomUser, on_delete=models.SET_NULL)
     employee = models.ManyToManyField(CustomUser, related_name="employees")
 
     def __str__(self) -> str:
