@@ -32,6 +32,7 @@ class TeamTestCase(TestCase):
             username="test3",
             is_team_leader=False,
         )
+
         Team.objects.create(
             team=1111, team_leader=CustomUser.objects.get(email="test1@test.com")
         )

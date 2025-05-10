@@ -5,22 +5,35 @@ from .models import Attendance, CustomUser
 
 class CustomUserTestCase(TestCase):
     def setUp(self):
-        CustomUser.objects.create(
+        team_leader = CustomUser(
             first_name="test1",
             last_name="test1",
             email="test1@test.com",
-            password="test",
             username="test1",
             is_team_leader=True,
         )
-        CustomUser.objects.create(
+        team_leader.set_password("test")
+        team_leader.save()
+
+        employee = CustomUser(
             first_name="test2",
             last_name="test2",
             email="test2@test.com",
-            password="test",
             username="test2",
             is_team_leader=False,
         )
+        employee.set_password("test")
+        employee.save()
+
+    def test_password_hashed(self):
+        teamleader = CustomUser.objects.get(email="test1@test.com")
+        employee = CustomUser.objects.get(email="test2@test.com")
+
+        self.assertNotEqual(teamleader.password, "test")
+        self.assertNotEqual(employee.password, "test")
+
+        self.assertTrue(teamleader.password.startswith("pbkdf2_sha256$"))
+        self.assertTrue(employee.password.startswith("pbkdf2_sha256$"))
 
     def test_create_team_leader(self):
         teamleader = CustomUser.objects.get(email="test1@test.com")

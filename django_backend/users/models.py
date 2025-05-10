@@ -6,7 +6,7 @@ class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=30, null=False, blank=False)
     last_name = models.CharField(max_length=30, null=False, blank=False)
     email = models.EmailField(unique=True, max_length=50, null=False, blank=False)
-    password = models.CharField(max_length=80, null=False, blank=False)
+    password = models.CharField(max_length=100, null=False, blank=False)
     is_team_leader = models.BooleanField(null=False, blank=False, default=False)
 
     USERNAME_FIELD = "email"

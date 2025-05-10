@@ -8,4 +8,4 @@ class Team(models.Model):
     employee = models.ManyToManyField(CustomUser, related_name="employees")
 
     def __str__(self) -> str:
-        return f"Team({self.team} team_leader: {self.team_leader} empyloyees: {self.employee})"
+        return f"Team({self.team} team_leader: {self.team_leader} empyloyees: {self.employee.all()})"
