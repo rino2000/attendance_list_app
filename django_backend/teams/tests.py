@@ -32,13 +32,25 @@ class TeamTestCase(TestCase):
             username="test3",
             is_team_leader=False,
         )
+        Team.objects.create(
+            team=1111, team_leader=CustomUser.objects.get(email="test1@test.com")
+        )
 
     def test_create_team(self):
-        teamleader = CustomUser.objects.get(email="test1@test.com")
-        employee = CustomUser.objects.get(email="test2@test.com")
+        t = Team.objects.first()
+
+        self.assertEqual(t.team, 1111)
+        self.assertEqual(t.team_leader, CustomUser.objects.get(email="test1@test.com"))
+        self.assertEqual(t.employee.count(), 0)
+
+    def test_add_employees_in_team(self):
         employee2 = CustomUser.objects.get(email="test2@test.com")
+        employee3 = CustomUser.objects.get(email="test3@test.com")
+        t = Team.objects.first()
 
-        t = Team.objects.create(team=1111, team_leader=teamleader)
-        t.employees.add(employee2)
+        t.employee.add(employee2.pk)
+        t.employee.add(employee3.pk)
 
-        self.assertEqual(t.team_leader, teamleader)
+        self.assertIn(employee2, t.employee.all())
+        self.assertIn(employee3, t.employee.all())
+        self.assertEqual(2, t.employee.count())
