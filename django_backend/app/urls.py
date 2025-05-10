@@ -17,7 +17,13 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
+from users.views import CreateUserView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path(
+        "api/user/create",
+        CreateUserView.as_view(),
+        name="create_user_api",
+    ),
 ]

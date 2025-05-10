@@ -1,4 +1,6 @@
 from django.test import TestCase
+from rest_framework import status
+from rest_framework.test import APITestCase
 
 from .models import Attendance, CustomUser
 
@@ -57,3 +59,24 @@ class CustomUserTestCase(TestCase):
         self.assertEqual(attendance.date, datetime.date.today())
         self.assertEqual(attendance.reason, "test reason")
         self.assertEqual(attendance.employee.pk, employee.pk)
+
+
+class TestApi(APITestCase):
+
+    def test_create_custom_user(self):
+        data = {
+            "username": "test123",
+            "first_name": "test",
+            "last_name": "test",
+            "email": "test@test.com",
+            "password": "test",
+            "is_team_leader": True,
+        }
+
+        response = self.client.post("/api/user/create", data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(CustomUser.objects.count(), 1)
+        self.assertEqual(
+            CustomUser.objects.get(email="test@test.com").email, "test@test.com"
+        )
