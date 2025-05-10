@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .models import CustomUser
+from .models import Attendance, CustomUser
 
 
 class CustomUserTestCase(TestCase):
@@ -31,3 +31,16 @@ class CustomUserTestCase(TestCase):
 
         self.assertEqual(employee.email, "test2@test.com")
         self.assertEqual(employee.is_team_leader, False)
+
+    def test_add_user_to_attendance(self):
+        employee = CustomUser.objects.get(email="test2@test.com")
+
+        attendance = Attendance.objects.create(
+            employee_id=employee.pk, reason="test reason"
+        )
+
+        import datetime
+
+        self.assertEqual(attendance.date, datetime.date.today())
+        self.assertEqual(attendance.reason, "test reason")
+        self.assertEqual(attendance.employee.pk, employee.pk)

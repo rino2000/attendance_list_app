@@ -29,4 +29,4 @@ class Attendance(models.Model):
     reason = models.TextField(max_length=100, blank=True, null=True)
 
     def __str__(self) -> str:
-        return f"Attendance({self.employee.pk} {self.date})"
+        return f"Attendance(CustomUser id: {self.employee.pk} date: {self.date} reason: {self.reason})"
