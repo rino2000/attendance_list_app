@@ -10,8 +10,7 @@ class CustomUserTestCase(TestCase):
         team_leader = CustomUser(
             first_name="test1",
             last_name="test1",
-            email="test1@test.com",
-            username="test1",
+            username="test1@test.com",
             is_team_leader=True,
         )
         team_leader.set_password("test")
@@ -20,16 +19,15 @@ class CustomUserTestCase(TestCase):
         employee = CustomUser(
             first_name="test2",
             last_name="test2",
-            email="test2@test.com",
-            username="test2",
+            username="test2@test.com",
             is_team_leader=False,
         )
         employee.set_password("test")
         employee.save()
 
     def test_password_hashed(self):
-        teamleader = CustomUser.objects.get(email="test1@test.com")
-        employee = CustomUser.objects.get(email="test2@test.com")
+        teamleader = CustomUser.objects.get(username="test1@test.com")
+        employee = CustomUser.objects.get(username="test2@test.com")
 
         self.assertNotEqual(teamleader.password, "test")
         self.assertNotEqual(employee.password, "test")
@@ -38,17 +36,17 @@ class CustomUserTestCase(TestCase):
         self.assertTrue(employee.password.startswith("pbkdf2_sha256$"))
 
     def test_create_team_leader(self):
-        teamleader = CustomUser.objects.get(email="test1@test.com")
-        employee = CustomUser.objects.get(email="test2@test.com")
+        teamleader = CustomUser.objects.get(username="test1@test.com")
+        employee = CustomUser.objects.get(username="test2@test.com")
 
-        self.assertEqual(teamleader.email, "test1@test.com")
+        self.assertEqual(teamleader.username, "test1@test.com")
         self.assertEqual(teamleader.is_team_leader, True)
 
-        self.assertEqual(employee.email, "test2@test.com")
+        self.assertEqual(employee.username, "test2@test.com")
         self.assertEqual(employee.is_team_leader, False)
 
     def test_add_user_to_attendance(self):
-        employee = CustomUser.objects.get(email="test2@test.com")
+        employee = CustomUser.objects.get(username="test2@test.com")
 
         attendance = Attendance.objects.create(
             employee_id=employee.pk, reason="test reason"
@@ -65,10 +63,9 @@ class TestApi(APITestCase):
 
     def test_create_custom_user(self):
         data = {
-            "username": "test123",
+            "username": "test@test.com",
             "first_name": "test",
             "last_name": "test",
-            "email": "test@test.com",
             "password": "test",
             "is_team_leader": True,
         }
@@ -78,5 +75,29 @@ class TestApi(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(CustomUser.objects.count(), 1)
         self.assertEqual(
-            CustomUser.objects.get(email="test@test.com").email, "test@test.com"
+            CustomUser.objects.get(username="test@test.com").username, "test@test.com"
         )
+
+        response = self.client.post(path="/api/user/create", data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["username"][0], "A user with that username already exists."
+        )
+        self.assertTrue(CustomUser.objects.filter(username="test@test.com").exists())
+
+        employee = {
+            "first_name": "test",
+            "last_name": "test",
+            "username": "test111@test.com",
+            "password": "test",
+            "is_team_leader": False,
+        }
+
+        response = self.client.post(
+            path="/api/user/create", data=employee, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(CustomUser.objects.filter(username="test111@test.com").exists())
+        self.assertEqual(CustomUser.objects.all().count(), 2)
