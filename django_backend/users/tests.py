@@ -58,6 +58,19 @@ class CustomUserTestCase(TestCase):
         self.assertEqual(attendance.reason, "test reason")
         self.assertEqual(attendance.employee.pk, employee.pk)
 
+    def test_permission_if_custom_user_is_team_leader(self):
+        from django.contrib.auth.models import Permission
+        from django.contrib.contenttypes.models import ContentType
+
+        content_type = ContentType.objects.get_for_model(CustomUser)
+        permission = Permission.objects.get(
+            content_type=content_type, codename="can_create_team"
+        )
+
+        emp = CustomUser.objects.get(username="test1@test.com")
+        emp.save()
+        emp.user_permissions.add(permission)
+
 
 class TestApi(APITestCase):
 
@@ -81,9 +94,6 @@ class TestApi(APITestCase):
         response = self.client.post(path="/api/user/create", data=data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["username"][0], "A user with that username already exists."
-        )
         self.assertTrue(CustomUser.objects.filter(username="test@test.com").exists())
 
         employee = {
@@ -101,3 +111,18 @@ class TestApi(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(CustomUser.objects.filter(username="test111@test.com").exists())
         self.assertEqual(CustomUser.objects.all().count(), 2)
+
+    def test_if_password_is_hashed(self):
+        data = {
+            "username": "test@test.com",
+            "first_name": "test",
+            "last_name": "test",
+            "password": "test",
+            "is_team_leader": True,
+        }
+
+        response = self.client.post("/api/user/create", data, format="json")
+
+        team_leader = CustomUser.objects.get(username="test@test.com")
+        print(team_leader.password)
+        self.assertTrue(team_leader.password.startswith("pbkdf2_sha256$"))

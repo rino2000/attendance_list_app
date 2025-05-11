@@ -18,6 +18,9 @@ class CustomUser(AbstractUser):
 
     REQUIRED_FIELDS = ["password"]
 
+    class Meta:
+        permissions = (("can_create_team", "Can create Team (only Team leaders)"),)
+
     def __str__(self) -> str:
         return f"CustomUser(id: {self.pk} email: {self.username} is team leader: {self.is_team_leader})"
 
