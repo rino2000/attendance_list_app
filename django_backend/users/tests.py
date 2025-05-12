@@ -112,7 +112,7 @@ class TestApi(APITestCase):
         self.assertTrue(CustomUser.objects.filter(username="test111@test.com").exists())
         self.assertEqual(CustomUser.objects.all().count(), 2)
 
-    def test_if_password_is_hashed(self):
+    def test_password_hash(self):
         data = {
             "username": "test@test.com",
             "first_name": "test",
@@ -121,8 +121,8 @@ class TestApi(APITestCase):
             "is_team_leader": True,
         }
 
-        response = self.client.post("/api/user/create", data, format="json")
+        self.client.post("/api/user/create", data, format="json")
 
         team_leader = CustomUser.objects.get(username="test@test.com")
-        print(team_leader.password)
         self.assertTrue(team_leader.password.startswith("pbkdf2_sha256$"))
+        self.assertTrue(team_leader.check_password("test"))

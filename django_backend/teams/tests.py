@@ -9,44 +9,43 @@ class TeamTestCase(TestCase):
         CustomUser.objects.create(
             first_name="test1",
             last_name="test1",
-            email="test1@test.com",
+            username="test1@test.com",
             password="test",
-            username="test1",
             is_team_leader=True,
         )
 
         CustomUser.objects.create(
             first_name="test2",
             last_name="test2",
-            email="test2@test.com",
+            username="test2@test.com",
             password="test",
-            username="test2",
             is_team_leader=False,
         )
 
         CustomUser.objects.create(
             first_name="test3",
             last_name="test3",
-            email="test3@test.com",
             password="test",
-            username="test3",
+            username="test3@test.com",
             is_team_leader=False,
         )
 
         Team.objects.create(
-            team=1111, team_leader=CustomUser.objects.get(email="test1@test.com")
+            team=1111, team_leader=CustomUser.objects.get(username="test1@test.com")
         )
 
     def test_create_team(self):
         t = Team.objects.first()
 
         self.assertEqual(t.team, 1111)
-        self.assertEqual(t.team_leader, CustomUser.objects.get(email="test1@test.com"))
+        self.assertEqual(
+            t.team_leader, CustomUser.objects.get(username="test1@test.com")
+        )
         self.assertEqual(t.employee.count(), 0)
 
     def test_add_employees_in_team(self):
-        employee2 = CustomUser.objects.get(email="test2@test.com")
-        employee3 = CustomUser.objects.get(email="test3@test.com")
+        employee2 = CustomUser.objects.get(username="test2@test.com")
+        employee3 = CustomUser.objects.get(username="test3@test.com")
         t = Team.objects.first()
 
         t.employee.add(employee2.pk)
