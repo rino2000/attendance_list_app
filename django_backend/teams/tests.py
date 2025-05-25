@@ -19,7 +19,7 @@ class TeamTestCase(TestCase):
             last_name="test2",
             username="test2@test.com",
             password="test",
-            is_team_leader=False,
+            # is_team_leader=False,
         )
 
         CustomUser.objects.create(
@@ -27,16 +27,19 @@ class TeamTestCase(TestCase):
             last_name="test3",
             password="test",
             username="test3@test.com",
-            is_team_leader=False,
+            # is_team_leader=False,
         )
 
         Team.objects.create(
             team=1111, team_leader=CustomUser.objects.get(username="test1@test.com")
         )
 
+    def test_team_employees_empty(self):
+        t = Team.objects.first()
+        self.assertTrue(t.employee.count() == 0)
+
     def test_create_team(self):
         t = Team.objects.first()
-
         self.assertEqual(t.team, 1111)
         self.assertEqual(
             t.team_leader, CustomUser.objects.get(username="test1@test.com")
