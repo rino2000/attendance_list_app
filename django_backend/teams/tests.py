@@ -19,7 +19,7 @@ class TeamTestCase(TestCase):
             last_name="test2",
             username="test2@test.com",
             password="test",
-            # is_team_leader=False,
+            is_team_leader=False,
         )
 
         CustomUser.objects.create(
@@ -27,7 +27,7 @@ class TeamTestCase(TestCase):
             last_name="test3",
             password="test",
             username="test3@test.com",
-            # is_team_leader=False,
+            is_team_leader=False,
         )
 
         Team.objects.create(

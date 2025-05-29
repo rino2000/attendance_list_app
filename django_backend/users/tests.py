@@ -2,6 +2,8 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from teams.models import Team
+
 from .models import Attendance, CustomUser
 
 
@@ -102,10 +104,7 @@ class TestApi(APITestCase):
 
         response = self.client.post("/api/user/create", data, format="json")
 
-        print(response.json())
-
         team_leader = CustomUser.objects.get(username="test2222@test.com")
-        print(f"team_leader hashed password over api == {team_leader.password}")
 
         self.assertTrue(team_leader.password.startswith("pbkdf2_sha256$"))
 
@@ -136,4 +135,30 @@ class TestApi(APITestCase):
         self.client.post("/api/user/create", data, format="json")
 
         team_leader = CustomUser.objects.get(username="test123456@test.com")
-        print(team_leader.has_perm("users.can_create_team"))
+        self.assertEqual(team_leader.is_team_leader, True)
+        self.assertEqual(team_leader.has_perm("users.can_create_team"), True)
+
+    def test_user_create_team_error(self):
+        data = {
+            "username": "test123456789@test.com",
+            "first_name": "test",
+            "last_name": "test",
+            "password": "test",
+            "is_team_leader": False,
+        }
+
+        response = self.client.post("/api/user/create", data, format="json")
+
+        user = CustomUser.objects.get(username="test123456789@test.com")
+
+        self.assertEqual(user.is_team_leader, False)
+        self.assertEqual(user.has_perm("users.can_create_team_leader"), False)
+
+        team = Team(team=1234, team_leader=user)
+
+        from django.core.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError) as error:
+            team.save()
+
+        self.assertEqual(error.exception.message, "User must be a team leader")
