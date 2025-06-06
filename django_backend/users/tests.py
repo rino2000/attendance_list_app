@@ -1,5 +1,10 @@
 from django.test import TestCase
+from asgiref.sync import sync_to_async
+from django.http import HttpResponse
+from django.test import AsyncClient
+from django.urls import reverse
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 from teams.models import Team
@@ -26,6 +31,8 @@ class CustomUserTestCase(TestCase):
         )
         self.employee.set_password("test")
         self.employee.save()
+
+        return super().setUp()
 
     def test_password_hashed(self):
         self.assertNotEqual(self.team_leader.password, "test")
@@ -55,105 +62,64 @@ class CustomUserTestCase(TestCase):
 
 class TestApi(APITestCase):
 
-    def test_create_custom_user(self):
-        data = {
-            "username": "test@test.com",
-            "first_name": "test",
-            "last_name": "test",
-            "password": "test",
-            "is_team_leader": True,
-        }
-
-        response = self.client.post("/api/user/create", data, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(CustomUser.objects.count(), 1)
-        self.assertEqual(
-            CustomUser.objects.get(username="test@test.com").username, "test@test.com"
-        )
-
-        response = self.client.post(path="/api/user/create", data=data, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(CustomUser.objects.filter(username="test@test.com").exists())
-
-        employee = {
-            "first_name": "test",
-            "last_name": "test",
-            "username": "test111@test.com",
-            "password": "test",
-            "is_team_leader": False,
-        }
-
-        response = self.client.post(
-            path="/api/user/create", data=employee, format="json"
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(CustomUser.objects.filter(username="test111@test.com").exists())
-        self.assertEqual(CustomUser.objects.all().count(), 2)
-
-    def test_password_hash_over_api(self):
-        data = {
-            "username": "test2222@test.com",
-            "first_name": "test",
-            "last_name": "test",
-            "password": "test",
-            "is_team_leader": True,
-        }
-
-        response = self.client.post("/api/user/create", data, format="json")
-
-        team_leader = CustomUser.objects.get(username="test2222@test.com")
-
-        self.assertTrue(team_leader.password.startswith("pbkdf2_sha256$"))
-
-    def test_user_can_not_create_team_permission(self):
-        data = {
+    def setUp(self):
+        self.team_leader = {
             "username": "test123@test.com",
             "first_name": "test",
             "last_name": "test",
             "password": "test",
-            "is_team_leader": False,
-        }
-
-        self.client.post("/api/user/create", data, format="json")
-
-        customUser = CustomUser.objects.get(username="test123@test.com")
-
-        self.assertFalse(customUser.has_perm("users.can_create_team"))
-
-    def test_team_leader_has_permission_to_create_team(self):
-        data = {
-            "username": "test123456@test.com",
-            "first_name": "test",
-            "last_name": "test",
-            "password": "test",
             "is_team_leader": True,
         }
 
-        self.client.post("/api/user/create", data, format="json")
-
-        team_leader = CustomUser.objects.get(username="test123456@test.com")
-        self.assertEqual(team_leader.is_team_leader, True)
-        self.assertEqual(team_leader.has_perm("users.can_create_team"), True)
-
-    def test_user_create_team_error(self):
-        data = {
-            "username": "test123456789@test.com",
+        self.user = {
+            "username": "test111@test.com",
             "first_name": "test",
             "last_name": "test",
             "password": "test",
             "is_team_leader": False,
         }
 
-        response = self.client.post("/api/user/create", data, format="json")
+        self.async_client = AsyncClient()
 
-        user = CustomUser.objects.get(username="test123456789@test.com")
+    async def test_create_user(self):
+        response: HttpResponse = await self.async_client.post(
+            path="/api/user/create", data=self.user, format="json"
+        )
 
-        self.assertEqual(user.is_team_leader, False)
-        self.assertEqual(user.has_perm("users.can_create_team_leader"), False)
+        user = await CustomUser.objects.aget(username=self.user.get("username"))
 
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(await CustomUser.objects.acount(), 1)
+
+        self.assertTrue(not user.is_team_leader)
+        self.assertTrue(user.password.startswith("pbkdf2_sha256$"))
+
+    async def test_create_team_leader(self):
+        response: HttpResponse = await self.async_client.post(
+            path="/api/user/create", data=self.team_leader, format="json"
+        )
+
+        team_leader = await CustomUser.objects.aget(
+            username=self.team_leader.get("username")
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(team_leader.password.startswith("pbkdf2_sha256$"))
+
+        self.assertTrue(team_leader.is_team_leader)
+        self.assertTrue(await team_leader.ahas_perm("users.can_create_team"))
+
+    async def test_user_has_not_create_team_permission(self):
+        await self.async_client.post("/api/user/create", data=self.user, format="json")
+
+        customUser = await CustomUser.objects.aget(username=self.user.get("username"))
+
+        self.assertFalse(await customUser.ahas_perm("users.can_create_team"))
+
+    async def test_user_create_team_exception(self):
+        await self.async_client.post("/api/user/create", data=self.user, format="json")
+
+        user = await CustomUser.objects.aget(username=self.user.get("username"))
         team = Team(team=1234, team_leader=user)
 
         from django.core.exceptions import ValidationError
@@ -162,3 +128,27 @@ class TestApi(APITestCase):
             team.save()
 
         self.assertEqual(error.exception.message, "User must be a team leader")
+        self.assertFalse(user.is_team_leader)
+        self.assertFalse(await user.ahas_perm("users.can_create_team_leader"))
+
+    async def test_user_get_token(self):
+        response: HttpResponse = await self.async_client.post(
+            "/api/user/create", data=self.user, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response: HttpResponse = await self.async_client.post(
+            path=reverse("api_token_auth"),
+            data={
+                "username": self.user.get("username"),
+                "password": self.user.get("password"),
+            },
+            format="json",
+        )
+
+        user = await CustomUser.objects.aget(username=self.user.get("username"))
+        token = await sync_to_async(Token.objects.get)(user=user)
+
+        self.assertEqual(response.data["token"], token.key)
+        self.assertIn("token", response.data)

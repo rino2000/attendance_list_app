@@ -18,12 +18,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from users.views import CreateUserView
+from teams.views import CreateTeamView
+from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path(
-        "api/user/create",
-        CreateUserView.as_view(),
-        name="create_user_api",
-    ),
+    path("api/user/create", CreateUserView.as_view(), name="create_user_api"),
+    path("api/team/create", CreateTeamView.as_view(), name="create_team_api"),
+    path("api/token-login", obtain_auth_token, name="api_token_auth"),
 ]

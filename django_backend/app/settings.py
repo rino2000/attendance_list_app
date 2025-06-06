@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "users",
     "teams",
     "rest_framework",
+    "rest_framework.authtoken",
 ]
 
 MIDDLEWARE = [
@@ -83,6 +84,9 @@ DATABASES = {
         "PASSWORD": "",
         "HOST": "localhost",
         "PORT": "5432",
+        "TEST": {
+            "NAME": "test_databse_attendance_list",
+        },
     }
 }
 
@@ -131,9 +135,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.CustomUser"
 
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
-    ]
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
 }
 
 LOGGING = {
